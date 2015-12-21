@@ -3,8 +3,15 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var appBase = require('appbasejs');
 var app = express();
+var userName = "CoJNVLrNB";
+var passwd = "f449631d-30e9-47bd-8589-16cfbb3c06a0";
 
-appbase.credentials('app','secret');
+var appbaseRef = new Appbase({
+  url: 'https://scalr.api.appbase.io',
+  appname: 'AngelAppBaseEx',
+  username: userName,
+  password: passwd
+});
 
 app.set('port', (process.env.PORT || 3001));
 
