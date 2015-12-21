@@ -19,11 +19,11 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/api/angellist', function(req, res) {
+app.get('/api/list', function(req, res) {
   
 });
 
-app.post('/api/angelreq', function(req, res) {
+app.post('/api/req', function(req, res) {
   
 });
 
