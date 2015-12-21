@@ -1,0 +1,13 @@
+{
+  "name": "AngelAppBase",
+  "description": "Code from AppBase Angel.co example using reactjs",
+  "keywords": [ "appbase", "react", "reactjs", "angel", "angelco" ],
+  "repository": "https://github.com/clovesmjunior/AngelAppBase",
+  "logo": "https://appbase.io/images/logo.svg",
+  "website": "https://appbase.io/",
+  "success_url": "/",
+  "env" : {
+    "BUILDPACK_URL": "https://github.com/heroku/heroku-buildpack-nodejs.git"
+  }
+}
+
