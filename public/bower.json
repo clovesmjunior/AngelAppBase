@@ -1,8 +1,11 @@
 {
   "name": "br.com.angelappbase",
   "version": "1.0.0",
-  "dependencies": {},
-  "devDependencies": {
-    "react": "~0.13.3"
-  }
+  "dependencies": {
+    "react": "~0.14.3",
+    "babel": "*",
+    "marked": "~0.3.5",
+    "jquery": "~2.1.4"
+  },
+  "devDependencies": {}
 }
