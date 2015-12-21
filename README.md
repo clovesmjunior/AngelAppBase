@@ -8,20 +8,18 @@ This is an example of an application using the api appbase.io data stream, where
 
 The view files are available in the public folder  `public/` and REST requests are in `/api/` where you can get all the data. To start a server node must be done as follows:
 
-### Node
-
 ### Bower
 
 ```sh
 bower install
 ```
 
+### Node
+
 ```sh
 npm install
 node server.js
 ```
-
-
 
 And visit <http://localhost:3000/>.
 
