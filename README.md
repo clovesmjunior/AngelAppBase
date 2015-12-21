@@ -6,7 +6,7 @@ This is an example of an application using the api appbase.io data stream, where
 
 ## To use
 
-The view files are available in the public folder 'public / `and REST requests are in` / api / *' where you can get all the data. To start a server node must be done as follows:
+The view files are available in the public folder  `public/` and REST requests are in `/api/` where you can get all the data. To start a server node must be done as follows:
 
 ### Node
 
