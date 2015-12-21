@@ -10,16 +10,18 @@ The view files are available in the public folder  `public/` and REST requests a
 
 ### Node
 
-```sh
-npm install
-node server.js
-```
-
 ### Bower
 
 ```sh
 bower install
 ```
+
+```sh
+npm install
+node server.js
+```
+
+
 
 And visit <http://localhost:3000/>.
 
