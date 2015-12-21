@@ -3,18 +3,10 @@ module.exports = function(grunt) {
     var cssPath         = ["css/**/*.css"];
     var libs            = [ 
                             "bower_components/q/q.js", 
-                            "bower_components/jquery/dist/jquery.js", 
-                            "bower_components/angular/angular.js", 
-                            "bower_components/angular-mocks/angular-mocks.js",
-                            "bower_components/lodash/dist/lodash.js",
-                            "bower_components/angular-google-maps/dist/angular-google-maps.js",
-                            "bower_components/angular-ui/build/angular-ui.js",
-                            "bower_components/angular-bootstrap/ui-bootstrap.js",                            
+                            "bower_components/jquery/dist/jquery.js",                                                       
     ];
     var cssArray = [
-        "bower_components/bootstrap/dist/css/bootstrap.css",
-        "bower_components/bootstrap/dist/css/bootstrap.css.map",
-        "bower_components/angular-ui/build/angular-ui.css",
+        
     ];
     var specsPath       = 'specs/**/*spec*.js';
     var helperPath      = 'specs/helpers/*.js';
