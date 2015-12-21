@@ -15,13 +15,18 @@ npm install
 node server.js
 ```
 
+### Bower
 
-And visit <http://localhost:3001/>.
+```sh
+bower install
+```
+
+And visit <http://localhost:3000/>.
 
 ## Changing the port
 
 You can change the port number by setting the `$PORT` environment variable before invoking the script above, e.g.,
 
 ```sh
-PORT=3000 node server.js
+PORT=3001 node server.js
 ```
