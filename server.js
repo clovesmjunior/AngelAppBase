@@ -70,6 +70,8 @@ function sendEmail(jobText,email)
 }
 
 function createObjToAppBase(obj){
+  
+
   var objCreated = {           
       type: "job",
       id: obj.id,
@@ -80,7 +82,9 @@ function createObjToAppBase(obj){
         salary_min: obj.salary_min,
         salary_max: obj.salary_max,
         job_type: obj.job_type,
-        angellist_url: obj.angellist_url               
+        angellist_url: obj.angellist_url,
+        location: obj.tags[1].name.toLowerCase(),
+        tags:obj.tags              
       }
   };
   return objCreated;
@@ -108,7 +112,9 @@ new CronJob('*/1 * * * *', function() {
         obj =  jsonList[i];
 
         appbaseRef.index(createObjToAppBase(obj)).on('data', function(res) {
-            console.log(res);
+            if(res.created){
+              console.log(res);
+            }            
         }).on('error', function(err) {
             console.log(err);
         });
@@ -124,38 +130,34 @@ new CronJob('*/1 * * * *', function() {
   'America/Los_Angeles' /* Time zone of this job. */
 );
 
-//Update Client of exists jobs
-new CronJob('*/3 * * * *', function() {
-     
-      appbaseRef.searchStream({
-        type: 'job',
-        body: {
-            query: {
-                match_all: {}
-            }
-        }
-      }).on('data', function(opr, err) {
-        var jobsList = [];
-        //console.log(opr);
-        jobsList.push(opr);
-        //WebSocket to sinalize new job
-        io.emit('job_list', JSON.stringify(jobsList));      
-      }).on('error', function(err) {
-        console.log("caught a stream error", err);
-      });    
-
-  }, function () {
-    /* This function is executed when the job stops */
-  },
-  true, /* Start the job right now */
-  'America/Los_Angeles' /* Time zone of this job. */
-);
 
 
 app.get('/api/list', function(req, res) {
-    //console.log(app.get('KEY_ANGEL_TOKEN'));
-    
-    //res.json(jobsList);
+    var country = req.query.country.toLowerCase();
+    var city = req.query.city.toLowerCase();
+    var email = req.query.email.toLowerCase();
+    appbaseRef.searchStream({
+        type: 'job',
+        body: {
+            query: {
+                filtered: {
+                  filter : {
+                    terms : { 
+                      location : [city]
+                    }
+                  }
+                }
+              }
+            }
+    }).on('data', function(opr, err) {
+      var jobsList = [];
+      console.log(opr);
+      jobsList.push(opr);
+      //WebSocket to sinalize new job
+      io.emit('job_list', JSON.stringify(jobsList));      
+    }).on('error', function(err) {
+      console.log("caught a stream error", err);
+    });    
 });
 
 app.post('/api/req', function(req, res) {

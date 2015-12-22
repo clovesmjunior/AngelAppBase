@@ -8,39 +8,42 @@ function getHostName(){
 }
 
 var JobBox = React.createClass({
-  loadJobsFromServer: function() {
-    /*$.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      cache: false,
-      success: function(data) {
-      	console.log(data);
-        this.setState({data:data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
-    });*/
+  loadJobsFromServer: function() {    
   var objFather = this;
     socket.on('job_list', function(msg){
       console.log(msg);
       objFather.setState({data:msg});
-      //this.loadJobsFromServer();
     });
   },
   getInitialState: function() {
     return {data: []};
   },
+  handleJobSubmit: function(job){
+    var jobs = this.state.data;
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      type: 'GET',
+      data: job,
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        this.setState({data: jobs});
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+  },
   componentDidMount: function() {
     this.loadJobsFromServer();    
-    //setInterval(, this.props.pollInterval);
   },
   render: function() {  	 
   	 var valueState = (this.state.data instanceof Array)?this.state.data:JSON.parse(this.state.data);
     return (
       <div className="jobBox">
-        <h1>List of Jobs</h1>
-
+        <h1>Search Jobs</h1>
+        <JobForm onSearchJobSubmit={this.handleJobSubmit} />
+        <br />
         <JobsList data={valueState} />
       </div>
     );
@@ -87,7 +90,58 @@ var Job = React.createClass({
   }
 });
 
+var JobForm = React.createClass({
+  getInitialState: function() {
+    return {country: '', city: '', email: ''};
+  },
+  handleCountryChange: function(e) {
+    this.setState({country: e.target.value});
+  },
+  handleCityChange: function(e) {
+    this.setState({city: e.target.value});
+  },
+  handleEmailChange: function(e) {
+    this.setState({email: e.target.value});
+  },
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var country = this.state.country.trim();
+    var city = this.state.city.trim();
+    var email = this.state.email.trim();
+    if (!city || !country) {
+      return;
+    }
+    this.props.onSearchJobSubmit({country: country, city: city, email: email});
+    this.setState({country: '', city: '', email: ''});
+  },
+  render: function() {
+    return (
+      <form className="jobForm" onSubmit={this.handleSubmit}>
+        <input
+          type="text"
+          placeholder="Country"
+          value={this.state.country}
+          onChange={this.handleCountryChange}
+        />
+        <input
+          type="text"
+          placeholder="City"
+          value={this.state.city}
+          onChange={this.handleCityChange}
+        />
+        <input
+          type="text"
+          placeholder="E-mail"
+          value={this.state.email}
+          onChange={this.handleEmailChange}
+        />
+        <input type="submit" value="Search" />
+      </form>
+    );
+  }
+});
+
 React.render(
-<JobBox url="/api/list" pollInterval={60000} />,
+<JobBox url="/api/list" />,
 document.getElementById('content')
 );
