@@ -11,7 +11,7 @@ The view files are available in the public folder  `public/` and REST requests a
 ### Bower
 
 ```sh
-bower install
+bower update
 ```
 
 ### Node
