@@ -139,7 +139,7 @@ app.get('/api/list', function(req, res) {
     appbaseRef.searchStream({
         type: 'job',
         body: {
-            query: {
+            /*query: {
                 filtered: {
                   filter : {
                     terms : { 
@@ -147,6 +147,9 @@ app.get('/api/list', function(req, res) {
                     }
                   }
                 }
+              }*/
+              query: {
+                  match_all: {}
               }
             }
     }).on('data', function(opr, err) {
@@ -157,7 +160,8 @@ app.get('/api/list', function(req, res) {
       io.emit('job_list', JSON.stringify(jobsList));      
     }).on('error', function(err) {
       console.log("caught a stream error", err);
-    });    
+    }); 
+    res.json([]);   
 });
 
 app.post('/api/req', function(req, res) {
