@@ -1,4 +1,5 @@
 var path = require('path');
+var fs = require('fs'); // use to test load mock angel
 var express = require('express');
 var bodyParser = require('body-parser');
 var Appbase = require('appbase-js');
@@ -16,21 +17,82 @@ var appbaseRef = new Appbase({
   password: passwd
 });
 
+var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
+
 app.set('port', (process.env.PORT || 3001));
 
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+
+ 
+
+
+(function(y)
+  {
+        setInterval(function(){
+          fs.readFile(MOCK_FILE, function(err, data) {
+          if (err) {
+            console.error(err);
+            process.exit(1);
+          }
+
+          var jsonList = JSON.parse(data);
+
+          var obj;
+          for(i=0;i<jsonList.length; i++){
+            obj =  jsonList[i];
+
+            appbaseRef.index({           
+              type: "job",
+              id: obj.id,
+              body: {
+                title: obj.title,
+                created_at: obj.created_at,
+                updated_at: obj.updated_at,
+                salary_min: obj.salary_min,
+                salary_max: obj.salary_max,
+                job_type: obj.job_type,
+                angellist_url: obj.angellist_url               
+              }
+            }).on('data', function(res) {
+                console.log(res);
+            }).on('error', function(err) {
+                console.log(err);
+            });
+          }
+         });
+
+         /* angel.jobs.list().then(function(err, body) {
+              console.log(body);
+              res.setHeader('Cache-Control', 'no-cache');
+              res.json(body);
+              
+          }).catch(function(error){
+              console.log(error);
+          });*/
+    }, 30000);
+  })();
+
 app.get('/api/list', function(req, res) {
-    angel.jobs.list().then(function(err, body) {
-        console.log(body);
-        res.setHeader('Cache-Control', 'no-cache');
-        res.json(body);
-    }).catch(function(error){
-        console.log(error);
+    var jobsList = [];
+    appbaseRef.searchStream({
+      type: 'job',
+      body: {
+          query: {
+              match_all: {}
+          }
+      }
+    }).on('data', function(opr, err) {
+      //console.log(opr);
+      jobsList.push(opr);
+      
+    }).on('error', function(err) {
+      console.log("caught a stream error", err);
     });
-  
+
+    res.json(jobsList);
 });
 
 app.post('/api/req', function(req, res) {
