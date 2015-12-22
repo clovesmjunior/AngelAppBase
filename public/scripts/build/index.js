@@ -1,4 +1,6 @@
 
+var socket = io.connect('http://localhost:9595');
+
 
 var JobBox = React.createClass({
   loadJobsFromServer: function() {
@@ -20,7 +22,10 @@ var JobBox = React.createClass({
   },
   componentDidMount: function() {
     this.loadJobsFromServer();
-    setInterval(this.loadJobsFromServer, this.props.pollInterval);
+    socket.on('job_list', function(msg){
+      this.loadJobsFromServer();
+    });
+    //setInterval(, this.props.pollInterval);
   },
   render: function() {  	 
   	 var valueState = (this.state.data instanceof Array)?this.state.data:JSON.parse(this.state.data);

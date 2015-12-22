@@ -3,12 +3,29 @@ var fs = require('fs'); // use to test load mock angel
 var express = require('express');
 var bodyParser = require('body-parser');
 var Appbase = require('appbase-js');
+var Nodemailer = require("nodemailer");
+var CronJob = require('cron').CronJob;
+var SgTransport = require('nodemailer-sendgrid-transport');
+
 var angel = require('angel.co')('APP_ID', 'APP_SECRET');
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
+var KEY_ANGEL_TOKEN = 'angel_key_token';
+var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
 
 var app = express();
 var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
 var userName = "CoJNVLrNB"; // Your credential username
 var passwd = "f449631d-30e9-47bd-8589-16cfbb3c06a0"; //Your credential password
+var credentials = {
+  auth: {
+    api_user: 'yashshah',
+    api_key: 'appbase12'
+  }
+}
+var trsnp = Nodemailer.createTransport(SgTransport(credentials));
+
 
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
@@ -17,65 +34,95 @@ var appbaseRef = new Appbase({
   password: passwd
 });
 
-var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
-
 app.set('port', (process.env.PORT || 3001));
 
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+function sendEmail(jobText,email)
+{
+    var msgToSend = "This job may be of interest: "+jobText;
+    var mail = {
+        from: "appbase.io",
+        to: email,
+        subject: "New job recently registered",
+        text: msgToSend,
+        html: "<b>"+msgToSend+"</b>"
+    }
+    console.log(mail);
+    trsnp.sendMail(mail, function(error, info){
+      if(error){
+        return console.log(error);
+      }
+      console.log('Response: ' + info.response);
+    });
+}
 
- 
+function createObjToAppBase(obj){
+  var objCreated = {           
+      type: "job",
+      id: obj.id,
+      body: {
+        title: obj.title,
+        created_at: obj.created_at,
+        updated_at: obj.updated_at,
+        salary_min: obj.salary_min,
+        salary_max: obj.salary_max,
+        job_type: obj.job_type,
+        angellist_url: obj.angellist_url               
+      }
+  };
+  return objCreated;
+}
 
+// Run in determineted time for search jobs in angel-list
+// Run every five minutes
+new CronJob('*/1 * * * *', function() {
+    fs.readFile(MOCK_FILE, function(err, data) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+      /* angel.jobs.list().then(function(err, body) {
+          console.log(body);
+          var jsonList = body;
+          
+      }).catch(function(error){
+          console.log(error);
+      });*/
+      var jsonList = JSON.parse(data);
 
-(function(y)
-  {
-        setInterval(function(){
-          fs.readFile(MOCK_FILE, function(err, data) {
-          if (err) {
-            console.error(err);
-            process.exit(1);
-          }
+      var obj;
+      for(i=0;i<jsonList.length; i++){
+        obj =  jsonList[i];
 
-          var jsonList = JSON.parse(data);
+        appbaseRef.index(createObjToAppBase(obj)).on('data', function(res) {
+            console.log(res);
+        }).on('error', function(err) {
+            console.log(err);
+        });
+      }
+     });
 
-          var obj;
-          for(i=0;i<jsonList.length; i++){
-            obj =  jsonList[i];
+     
 
-            appbaseRef.index({           
-              type: "job",
-              id: obj.id,
-              body: {
-                title: obj.title,
-                created_at: obj.created_at,
-                updated_at: obj.updated_at,
-                salary_min: obj.salary_min,
-                salary_max: obj.salary_max,
-                job_type: obj.job_type,
-                angellist_url: obj.angellist_url               
-              }
-            }).on('data', function(res) {
-                console.log(res);
-            }).on('error', function(err) {
-                console.log(err);
-            });
-          }
-         });
-
-         /* angel.jobs.list().then(function(err, body) {
-              console.log(body);
-              res.setHeader('Cache-Control', 'no-cache');
-              res.json(body);
-              
-          }).catch(function(error){
-              console.log(error);
-          });*/
-    }, 30000);
-  })();
+  }, function () {
+    /* This function is executed when the job stops */
+  },
+  true, /* Start the job right now */
+  'America/Los_Angeles' /* Time zone of this job. */
+);
+http.listen(9595, "127.0.0.1");
+//WebSocket to sinalize new job
+io.on('connection', function(socket){
+  socket.on('job_list', function(msg){
+    io.emit('job_list', jobsList); 
+  });
+});
 
 app.get('/api/list', function(req, res) {
+    //console.log(app.get('KEY_ANGEL_TOKEN'));
     var jobsList = [];
     appbaseRef.searchStream({
       type: 'job',
@@ -87,12 +134,12 @@ app.get('/api/list', function(req, res) {
     }).on('data', function(opr, err) {
       //console.log(opr);
       jobsList.push(opr);
-      
+      io.emit('job_list', jobsList);      
     }).on('error', function(err) {
       console.log("caught a stream error", err);
     });
 
-    res.json(jobsList);
+    //res.json(jobsList);
 });
 
 app.post('/api/req', function(req, res) {
@@ -105,17 +152,18 @@ app.post('/api/req', function(req, res) {
     });
 });
 
-app.get('/auth/angel-list', function(req, res) {
-    res.redirect(angel.getAuthorizeUrl());
+app.get('/auth/autenticate', function(req, res) {
+    //console.log(angel.auth.getAuthorizeUrl());
+    res.redirect(angel.auth.getAuthorizeUrl());
 });
 
-app.get('/auth/angel-list/callback', function(req, res) {
+app.get('/auth/autenticate/callback', function(req, res) {
     angel.auth.requestAccessToken(req.query.code, function(err, response) {
         if ( err )
             return console.error(err); //Something went wrong.
 
         // I got the Token. Ain't you?
-        app.set('my_key_to_token', response.access_token); // Persist it anywhere.
+        app.set(KEY_ANGEL_TOKEN, response.access_token); // Persist it anywhere.
         res.redirect('/'); // Go back to the homepage.
     });
 });
