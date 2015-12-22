@@ -24,8 +24,18 @@ var credentials = {
     api_key: 'appbase12'
   }
 }
+
 var trsnp = Nodemailer.createTransport(SgTransport(credentials));
 
+
+http.listen(9595, "127.0.0.1");
+
+//connection websocket
+io.on('connection', function(socket){
+  socket.on('job_list', function(msg){
+    
+  });
+});
 
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
@@ -113,32 +123,38 @@ new CronJob('*/1 * * * *', function() {
   true, /* Start the job right now */
   'America/Los_Angeles' /* Time zone of this job. */
 );
-http.listen(9595, "127.0.0.1");
-//WebSocket to sinalize new job
-io.on('connection', function(socket){
-  socket.on('job_list', function(msg){
-    io.emit('job_list', jobsList); 
-  });
-});
+
+//Update Client of exists jobs
+new CronJob('*/3 * * * *', function() {
+     
+      appbaseRef.searchStream({
+        type: 'job',
+        body: {
+            query: {
+                match_all: {}
+            }
+        }
+      }).on('data', function(opr, err) {
+        var jobsList = [];
+        //console.log(opr);
+        jobsList.push(opr);
+        //WebSocket to sinalize new job
+        io.emit('job_list', JSON.stringify(jobsList));      
+      }).on('error', function(err) {
+        console.log("caught a stream error", err);
+      });    
+
+  }, function () {
+    /* This function is executed when the job stops */
+  },
+  true, /* Start the job right now */
+  'America/Los_Angeles' /* Time zone of this job. */
+);
+
 
 app.get('/api/list', function(req, res) {
     //console.log(app.get('KEY_ANGEL_TOKEN'));
-    var jobsList = [];
-    appbaseRef.searchStream({
-      type: 'job',
-      body: {
-          query: {
-              match_all: {}
-          }
-      }
-    }).on('data', function(opr, err) {
-      //console.log(opr);
-      jobsList.push(opr);
-      io.emit('job_list', jobsList);      
-    }).on('error', function(err) {
-      console.log("caught a stream error", err);
-    });
-
+    
     //res.json(jobsList);
 });
 
