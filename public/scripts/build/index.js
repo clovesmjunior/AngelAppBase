@@ -1,6 +1,11 @@
 
-var socket = io.connect('http://localhost:9595');
+var socket = io.connect('http://'+getHostName()+':9595');
 
+function getHostName(){
+  var url = window.location.hostname;
+  var arr = url.split(":");
+  return arr[0];
+}
 
 var JobBox = React.createClass({
   loadJobsFromServer: function() {
