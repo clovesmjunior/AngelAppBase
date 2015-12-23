@@ -6,8 +6,10 @@ var Appbase = require('appbase-js');
 var Nodemailer = require("nodemailer");
 var CronJob = require('cron').CronJob;
 var SgTransport = require('nodemailer-sendgrid-transport');
-
-var angel = require('angel.co')('APP_ID', 'APP_SECRET');
+var Map = require("collections/map");
+var accessToken = "b8a93c9ae8a66c16f77c734a2eb0f423d7f906964948087c";
+var angel = require('angel.co-promise')('dbb9c3878a9ddbe0fe76fb2e7ae13c1bc5b95ebd0421b2a2', 'cea006ffd06f4b390f2107d7f323c39690d1da9be919bbc7');
+angel.setAccessToken(accessToken);
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -93,33 +95,33 @@ function createObjToAppBase(obj){
 // Run in determineted time for search jobs in angel-list
 // Run every five minutes
 new CronJob('*/1 * * * *', function() {
-    fs.readFile(MOCK_FILE, function(err, data) {
+    /*fs.readFile(MOCK_FILE, function(err, data) {
       if (err) {
         console.error(err);
         process.exit(1);
-      }
-      /* angel.jobs.list().then(function(err, body) {
+      }*/
+      angel.jobs.tag('1622').then(function(body) {
           console.log(body);
-          var jsonList = body;
-          
+          var jsonList = body.jobs;
+          //var jsonList = bodyJSON.parse(data);
+
+          var obj;
+          for(i=0;i<jsonList.length; i++){
+            obj =  jsonList[i];
+
+            appbaseRef.index(createObjToAppBase(obj)).on('data', function(res) {
+                if(res.created){
+                  console.log(res);
+                }            
+            }).on('error', function(err) {
+                console.log(err);
+            });
+          }
+    
       }).catch(function(error){
           console.log(error);
-      });*/
-      var jsonList = JSON.parse(data);
-
-      var obj;
-      for(i=0;i<jsonList.length; i++){
-        obj =  jsonList[i];
-
-        appbaseRef.index(createObjToAppBase(obj)).on('data', function(res) {
-            if(res.created){
-              console.log(res);
-            }            
-        }).on('error', function(err) {
-            console.log(err);
-        });
-      }
-     });
+      });
+/*});*/
 
      
 
@@ -133,6 +135,7 @@ new CronJob('*/1 * * * *', function() {
 
 
 app.get('/api/list', function(req, res) {
+    var jobsList = new Map();
     var country = req.query.country.toLowerCase();
     var city = req.query.city.toLowerCase();
     var email = req.query.email.toLowerCase();
@@ -153,11 +156,11 @@ app.get('/api/list', function(req, res) {
               }
             }
     }).on('data', function(opr, err) {
-      var jobsList = [];
+      
       console.log(opr);
-      jobsList.push(opr);
+      jobsList.set(opr._id, opr);
       //WebSocket to sinalize new job
-      io.emit('job_list', JSON.stringify(jobsList));      
+      io.emit('job_list', JSON.stringify(jobsList.values()));      
     }).on('error', function(err) {
       console.log("caught a stream error", err);
     }); 
