@@ -26,7 +26,8 @@ var credentials = {
     api_key: 'appbase12'
   }
 }
-
+var countryCodesSet=[];
+//countryCodesSet['1622'] = '1622';
 var trsnp = Nodemailer.createTransport(SgTransport(credentials));
 
 
@@ -34,6 +35,7 @@ http.listen(9595, "127.0.0.1");
 
 //connection websocket
 io.on('connection', function(socket){
+  console.log(socket);
   socket.on('job_list', function(msg){
     
   });
@@ -71,7 +73,7 @@ function sendEmail(jobText,email)
     });
 }
 
-function createObjToAppBase(obj){
+function createObjToAppBase(obj, countryCode){
   
 
   var objCreated = {           
@@ -79,13 +81,14 @@ function createObjToAppBase(obj){
       id: obj.id,
       body: {
         title: obj.title,
+        country_code: countryCode,
         created_at: obj.created_at,
         updated_at: obj.updated_at,
         salary_min: obj.salary_min,
         salary_max: obj.salary_max,
         job_type: obj.job_type,
         angellist_url: obj.angellist_url,
-        location: obj.tags[1].name.toLowerCase(),
+        location: getLocationTag(obj).toLowerCase(),
         tags:obj.tags              
       }
   };
@@ -100,7 +103,21 @@ new CronJob('*/1 * * * *', function() {
         console.error(err);
         process.exit(1);
       }*/
-      angel.jobs.tag('1622').then(function(body) {
+      Object.keys(countryCodesSet).forEach(function (countryCode) {
+        if(countryCode!=null && countryCode!=""){
+          runInsertJobsInAppBase(countryCode);
+        }
+      });
+    /*});*/
+  }, function () {
+    /* This function is executed when the job stops */
+  },
+  true, /* Start the job right now */
+  'America/Los_Angeles' /* Time zone of this job. */
+);
+
+function runInsertJobsInAppBase(countryCode){
+      angel.jobs.tag(countryCode).then(function(body) {
           console.log(body);
           var jsonList = body.jobs;
           //var jsonList = bodyJSON.parse(data);
@@ -109,7 +126,7 @@ new CronJob('*/1 * * * *', function() {
           for(i=0;i<jsonList.length; i++){
             obj =  jsonList[i];
 
-            appbaseRef.index(createObjToAppBase(obj)).on('data', function(res) {
+            appbaseRef.index(createObjToAppBase(obj, countryCode)).on('data', function(res) {
                 if(res.created){
                   console.log(res);
                 }            
@@ -121,28 +138,33 @@ new CronJob('*/1 * * * *', function() {
       }).catch(function(error){
           console.log(error);
       });
-/*});*/
+}
 
-     
-
-  }, function () {
-    /* This function is executed when the job stops */
-  },
-  true, /* Start the job right now */
-  'America/Los_Angeles' /* Time zone of this job. */
-);
-
-
+function getLocationTag(obj){
+  var displayName = "";
+  obj.tags.forEach(function(tag){
+    switch(tag.tag_type){
+      case 'LocationTag':
+        displayName = tag.display_name;
+      return;      
+    }
+  });
+  return displayName;
+}
 
 app.get('/api/list', function(req, res) {
     var jobsList = new Map();
-    var country = req.query.country.toLowerCase();
+    var country = req.query.country.trim();
     var city = req.query.city.toLowerCase();
     var email = req.query.email.toLowerCase();
-    appbaseRef.searchStream({
+   
+    if(!isNaN(country)){
+       countryCodesSet[country] = country;
+    }
+    /*appbaseRef.searchStream({
         type: 'job',
         body: {
-            /*query: {
+            query: {
                 filtered: {
                   filter : {
                     terms : { 
@@ -150,14 +172,24 @@ app.get('/api/list', function(req, res) {
                     }
                   }
                 }
-              }*/
+              }
               query: {
                   match_all: {}
               }
             }
+    })*/
+    appbaseRef.search({
+        type: 'job',
+        body: {
+            query: {
+                match : { 
+                      location : city
+                    }
+            }
+        }
     }).on('data', function(opr, err) {
       
-      console.log(opr);
+      //console.log(opr);
       jobsList.set(opr._id, opr);
       //WebSocket to sinalize new job
       io.emit('job_list', JSON.stringify(jobsList.values()));      

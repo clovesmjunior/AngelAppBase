@@ -11,7 +11,7 @@ var JobBox = React.createClass({
   loadJobsFromServer: function() {    
   var objFather = this;
     socket.on('job_list', function(msg){
-      console.log(msg);
+      //console.log(msg);
       objFather.setState({data:msg});
     });
   },
@@ -20,6 +20,10 @@ var JobBox = React.createClass({
   },
   handleJobSubmit: function(job){
     var jobs = this.state.data;
+    if(jobs ==null || (jobs!=null && jobs.length==0)){
+      jobs = this.state[0];      
+    }
+
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -53,12 +57,15 @@ var JobBox = React.createClass({
 
 var JobsList = React.createClass({
   render: function() {
-    var jobNodes = this.props.data.map(function(varJob) {
-      console.log(varJob);
-      return (
-        <Job title={varJob._source.title} key={varJob._id}>{varJob._source.title} - {varJob._source.angellist_url}</Job>
-      );
-    });
+    console.log(this.props.data);
+    var jobNodes = this.props.data
+    if(jobNodes!=null && jobNodes.length>0){
+      var jobNodes = jobNodes[0].hits.hits.map(function(varJob) {
+        return (
+          <Job title={varJob._source.title} key={varJob._id}>{varJob._source.title} - {varJob._source.angellist_url}</Job>
+        );
+      });
+    }
     return (
       <div className="jobList">
         {jobNodes}
@@ -69,7 +76,6 @@ var JobsList = React.createClass({
 
 var Job = React.createClass({
   rawMarkup: function() {
-    console.log(this.props);
     if(this.props.children!=null){
       var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     }else{
