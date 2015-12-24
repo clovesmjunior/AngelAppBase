@@ -15,6 +15,8 @@ var io = require('socket.io')(http);
 
 var KEY_ANGEL_TOKEN = 'angel_key_token';
 var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
+var TAG_LOCATION = 'LocationTag';
+var TAG_ROLE = 'RoleTag';
 
 var app = express();
 var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
@@ -35,7 +37,7 @@ http.listen(9595, "127.0.0.1");
 
 //connection websocket
 io.on('connection', function(socket){
-  console.log(socket);
+  //console.log(socket);
   socket.on('job_list', function(msg){
     
   });
@@ -88,7 +90,8 @@ function createObjToAppBase(obj, countryCode){
         salary_max: obj.salary_max,
         job_type: obj.job_type,
         angellist_url: obj.angellist_url,
-        location: getLocationTag(obj).toLowerCase(),
+        location: getRefTypeTag(obj, TAG_LOCATION).toLowerCase(),
+        role_tag: getRefTypeTag(obj, TAG_ROLE),
         tags:obj.tags              
       }
   };
@@ -140,11 +143,10 @@ function runInsertJobsInAppBase(countryCode){
       });
 }
 
-function getLocationTag(obj){
+function getRefTypeTag(obj, typeTag){
   var displayName = "";
   obj.tags.forEach(function(tag){
-    switch(tag.tag_type){
-      case 'LocationTag':
+    if(tag.tag_type == typeTag){     
         displayName = tag.display_name;
       return;      
     }
