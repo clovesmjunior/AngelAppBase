@@ -32,8 +32,8 @@ var countryCodesSet=[];
 //countryCodesSet['1622'] = '1622';
 var trsnp = Nodemailer.createTransport(SgTransport(credentials));
 
-
-http.listen(9595, "127.0.0.1");
+var ipListen = "127.0.0.1";
+http.listen(9595, ipListen);
 
 //connection websocket
 io.on('connection', function(socket){
