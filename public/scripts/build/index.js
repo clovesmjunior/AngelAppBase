@@ -1,5 +1,4 @@
 
-var socket = io.connect('http://'+getHostName()+':9595');
 var Navbar = ReactBootstrap.Navbar,
     Nav  = ReactBootstrap.Nav,
     NavItem  = ReactBootstrap.NavItem,
@@ -10,49 +9,52 @@ var Navbar = ReactBootstrap.Navbar,
     Input = ReactBootstrap.Input,
     Table = ReactBootstrap.Table;
 
-function getHostName(){
-  var url = window.location.hostname;
-  var arr = url.split(":");
-  return arr[0];
-}
+var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
+var userName = "FBwcJXltL"; // Your credential username
+var passwd = "c056b235-e937-4db0-948f-a09a55ddc1cd"; //Your credential password
+
+var appbaseRef = new Appbase({
+  url: 'https://scalr.api.appbase.io',
+  appname: nameApp,
+  username: userName,
+  password: passwd
+});
 
 
 var JobBox = React.createClass({
   loadJobsFromServer: function() {    
-  var objFather = this;
-    socket.on('job_list', function(msg){
-      //console.log(msg);
-      objFather.setState({data:msg});
-    });
+    var objFather = this;
   },
   getInitialState: function() {
     return {data: []};
   },
   handleJobSubmit: function(job){
+    var objThis = this;
     var jobs = this.state.data;
     if(jobs ==null || (jobs!=null && jobs.length==0)){
       jobs = this.state[0];      
     }
-
-    $.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      type: 'GET',
-      data: job,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        this.setState({data: jobs});
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
-    });
+    console.log(job);
+     appbaseRef.search({
+        type: 'job',
+        body: {
+            query: {
+                match : { 
+                      location : job.city
+                    }
+            }
+        }
+    }).on('data', function(opr, err) {          
+      objThis.setState({data: [opr]});     
+    }).on('error', function(err) {
+      console.log("caught a stream error", err);
+    }); 
   },
   componentDidMount: function() {
     this.loadJobsFromServer();    
   },
   render: function() {  	 
-  	 var valueState = (this.state.data instanceof Array)?this.state.data:JSON.parse(this.state.data);
+  	 var valueState = (this.state.data instanceof Array)?this.state.data:JSON.parse(this.state.data);    
     return (
       
       <div className="jobBox">
@@ -70,7 +72,8 @@ var JobBox = React.createClass({
 var JobsList = React.createClass({
   render: function() {
     console.log(this.props.data);
-    var jobNodes = this.props.data
+    var jobNodes = this.props.data;
+    console.log(jobNodes);
     if(jobNodes!=null && jobNodes.length>0){
       var jobNodes = jobNodes[0].hits.hits.map(function(varJob) {
 
