@@ -50,6 +50,9 @@ var JobBox = React.createClass({
       console.log("caught a stream error", err);
     }); 
   },
+  handleEmailSubmit: function(mail){
+
+  },
   componentDidMount: function() {
     this.loadJobsFromServer();    
   },
@@ -60,6 +63,7 @@ var JobBox = React.createClass({
       <div className="jobBox">
       <ABNavBar />
         <h1>Search Jobs</h1>
+        <JobMailForm onJoinMailSubmit={this.handleEmailSubmit} />
         <JobForm onSearchJobSubmit={this.handleJobSubmit} />
         <br />
         <JobsList data={valueState} />
@@ -135,27 +139,23 @@ var Job = React.createClass({
 var JobForm = React.createClass({
   
   getInitialState: function() {
-    return {country: '', city: '', email: ''};
+    return {country: '', city: ''};
   },
   handleCountryChange: function(e) {
     this.setState({country: e.target.value});
   },
   handleCityChange: function(e) {
     this.setState({city: e.target.value});
-  },
-  handleEmailChange: function(e) {
-    this.setState({email: e.target.value});
-  },
+  },  
   handleSubmit: function(e) {
     e.preventDefault();
     var country = this.state.country.trim();
-    var city = this.state.city.trim();
-    var email = this.state.email.trim();
+    var city = this.state.city.trim();    
     if (!city || !country) {
       return;
     }
-    this.props.onSearchJobSubmit({country: country, city: city, email: email});
-    this.setState({country: '', city: '', email: ''});
+    this.props.onSearchJobSubmit({country: country, city: city});
+    this.setState({country: '', city: ''});
   },
   render: function() {
     return (
@@ -180,14 +180,49 @@ var JobForm = React.createClass({
                     placeholder="City"
                     value={this.state.city}
                     onChange={this.handleCityChange}
-                  />
+                  />                 
+              <Button type="submit">Search</Button>              
+            </Navbar.Form>
+          </Navbar.Collapse>
+      </Navbar>    
+    </form>
+    );
+  }
+});
+
+var JobMailForm = React.createClass({
+  
+  getInitialState: function() {
+    return {email: ''};
+  },  
+  handleEmailChange: function(e) {
+    this.setState({email: e.target.value});
+  },
+  handleSubmit: function(e) {
+    e.preventDefault();   
+    var email = this.state.email.trim();   
+    this.props.onJoinMailSubmit({email: email});
+    this.setState({email: ''});
+  },
+  render: function() {
+    return (
+      <form className="jobMailForm" onSubmit={this.handleSubmit}>
+      <Navbar>
+          <Navbar.Header>
+            <Navbar.Brand>
+              <a href="#">Register your email to receive updates:</a>
+            </Navbar.Brand>
+            <Navbar.Toggle />
+          </Navbar.Header>
+          <Navbar.Collapse>
+            <Navbar.Form pullLeft>              
                   <Input
                     type="text"
                     placeholder="E-mail"
                     value={this.state.email}
                     onChange={this.handleEmailChange}
                   />
-              <Button type="submit">Search</Button>              
+              <Button type="submit">Join it</Button>              
             </Navbar.Form>
           </Navbar.Collapse>
       </Navbar>    
