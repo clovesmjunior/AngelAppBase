@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "test": "grunt test",
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "./node_modules/bower/bin/bower update"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
     "angel.co-promise": "^1.1.0",
     "appbase-js": "~0.9.0",
     "body-parser": "^1.4.3",
+    "bower": "^1.7.2",
     "brunch": "~2.0.4",
     "clean-css-brunch": "~1.8.0",
     "collections": "^1.2.4",
