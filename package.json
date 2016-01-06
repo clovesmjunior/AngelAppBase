@@ -9,8 +9,9 @@
   ],
   "scripts": {
     "test": "grunt test",
-    "start": "node server.js",
-    "postinstall": "./node_modules/bower/bin/bower update"
+    "postinstall": "./node_modules/bower/bin/bower install",
+    "postinstall": "./node_modules/bower/bin/bower update",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",

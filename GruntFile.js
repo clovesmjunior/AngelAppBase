@@ -2,8 +2,8 @@ module.exports = function(grunt) {
     var srcPath         = ["js/**/*.js"];
     var cssPath         = ["css/**/*.css"];
     var libs            = [ 
-                            "bower_components/q/q.js", 
-                            "bower_components/jquery/dist/jquery.js",                                                       
+                            "public/bower_components/q/q.js", 
+                            "public/bower_components/jquery/dist/jquery.js",                                                       
     ];
     var cssArray = [
         

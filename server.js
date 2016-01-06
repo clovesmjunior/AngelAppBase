@@ -35,13 +35,6 @@ var trsnp = Nodemailer.createTransport(SgTransport(credentials));
 var ipListen = "127.0.0.1";
 http.listen(9595, ipListen);
 
-//connection websocket
-io.on('connection', function(socket){
-  //console.log(socket);
-  socket.on('job_list', function(msg){
-    
-  });
-});
 
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
