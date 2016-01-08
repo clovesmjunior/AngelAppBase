@@ -39,7 +39,19 @@ var JobBox = React.createClass({
       this.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Please complete the country and city!"});    
       return;
     }
-
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      type: 'POST',
+      data: job,
+      success: function(data) {
+        
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+    
     console.log(job);
     appbaseRef.search({
         type: 'job',
@@ -333,6 +345,6 @@ var AlertAngel = React.createClass({
 
 
 React.render(
-<JobBox />,
+<JobBox url="/api/regcountry"/>,
 document.getElementById('content')
 );

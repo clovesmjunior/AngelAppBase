@@ -149,33 +149,9 @@ function getRefTypeTag(obj, typeTag){
   });
   return displayName;
 }
-
-app.post('/api/newmail', function(req, res) {
-    res.setHeader('Cache-Control', 'no-cache');
-    body = {msg: ""};
-    var mail = req.body.email.toLowerCase();
-    var objCreated = {           
-      type: "email",
-      id: mail,
-      body: {
-        email: mail            
-      }
-    };
-
-     appbaseRef.index(objCreated).on('data', function(res) {
-        if(res.created){
-          console.log(res);
-          body = {msg: "Email registered successfully"};
-        }else{
-          body = {msg: "E-mail is already in our database!"};
-        }   
-        broadcastForEmail("Tste");         
-    }).on('error', function(err) {
-        console.log(err);
-        body = {msg: "Error registering email."};
-    });
-    res.setHeader('Cache-Control', 'no-cache');
-    res.json(body);
+app.post('/api/regcountry', function(req, res) {
+  var country = req.body.country.trim();
+  countryCodesSet[country] = country;
 });
 
 app.post('/api/req', function(req, res) {
