@@ -142,7 +142,7 @@ var JobsList = React.createClass({
         return (
           <Job title={varJob._source.title} 
           job_type = {varJob._source.job_type} 
-          url={varJob._source.angellist_url} 
+          //url={varJob._source.angellist_url} 
           key={varJob._id}  
           location={utils.capitalize(varJob._source.location)}
           prop_key={varJob._id}   
@@ -159,8 +159,7 @@ var JobsList = React.createClass({
               <th>Location</th>
               <th>Title Job</th>
               <th>Role</th>
-              <th>Job Type</th>
-              <th>Url</th>
+              <th>Job Type</th>              
             </tr>
           </thead>
           <tbody>
@@ -268,7 +267,7 @@ var JobMailForm = React.createClass({
       <Navbar>
           <Navbar.Header>
             <Navbar.Brand>
-              <a href="#">Register your email to receive updates:</a>
+              <a href="#">Register your email for updates:</a>
             </Navbar.Brand>
             <Navbar.Toggle />
           </Navbar.Header>
