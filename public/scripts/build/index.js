@@ -40,18 +40,25 @@ var JobBox = React.createClass({
       return;
     }
 
-    //console.log(job);
+    console.log(job);
     appbaseRef.search({
         type: 'job',
         body: {
-          query: {
-              match : { 
-                country_code : job.country,
-                location : job.city
-              }
-          }
+           query: {    
+              bool: {
+                    "must": [
+                        {term: {
+                            country_code: job.country
+                        }},
+                        {term: {
+                            city: job.city
+                        }}
+                    ]
+                }    
+            }
         }
-    }).on('data', function(opr, err) {          
+    }).on('data', function(opr, err) {   
+      console.log(opr);       
       objThis.setState({data: [opr],alertVisible: true, typeAlert: "success", msgAlert: "Operation executed success!"});
     }).on('error', function(err) {
       console.log("caught a stream error", err);

@@ -11,11 +11,10 @@ angel.setAccessToken("b8a93c9ae8a66c16f77c734a2eb0f423d7f906964948087c");
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var SENDGRID_USERNAME = "";
-var SENDGRID_PASSWORD = "";
+var SENDGRID_API_KEY = "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";
 var MAIL_FROM = "";
 
-var sendgrid   = require('sendgrid')(SENDGRID_USERNAME, SENDGRID_PASSWORD);
+var sendgrid   = require('sendgrid')(SENDGRID_API_KEY);
 
 var KEY_ANGEL_TOKEN = 'angel_key_token';
 var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
@@ -27,7 +26,7 @@ var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
 var userName = "CoJNVLrNB"; // Your credential username
 var passwd = "f449631d-30e9-47bd-8589-16cfbb3c06a0"; //Your credential password
 var countryCodesSet=[];
-//countryCodesSet['1622'] = '1622';
+countryCodesSet['1622'] = '1622';
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
   appname: nameApp,
@@ -86,6 +85,7 @@ function createObjToAppBase(obj, countryCode){
 // Run in determineted time for search jobs in angel-list
 // Run every five minutes
 new CronJob('*/1 * * * *', function() {   
+      console.log(angel.tags.parents());
       Object.keys(countryCodesSet).forEach(function (countryCode) {
         if(countryCode!=null && countryCode!=""){
           runInsertJobsInAppBase(countryCode);
@@ -116,7 +116,7 @@ function broadcastForEmail(msg){
 
 function runInsertJobsInAppBase(countryCode){
       angel.jobs.tag(countryCode).then(function(body) {
-          console.log(body);
+          //console.log(body);
           var jsonList = body.jobs;
           //var jsonList = bodyJSON.parse(data);
 
