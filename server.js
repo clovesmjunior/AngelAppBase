@@ -12,7 +12,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var SENDGRID_API_KEY = "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";
-var MAIL_FROM = "";
+var MAIL_FROM = "angelappbase@gmail.com";
 
 var sendgrid   = require('sendgrid')(SENDGRID_API_KEY);
 

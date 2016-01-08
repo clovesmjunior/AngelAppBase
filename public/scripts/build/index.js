@@ -51,7 +51,7 @@ var JobBox = React.createClass({
                             country_code: job.country
                         }},
                         {term: {
-                            city: job.city
+                            location: job.city
                         }}
                     ]
                 }    
