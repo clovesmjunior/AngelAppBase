@@ -3,15 +3,19 @@ var fs = require('fs'); // use to test load mock angel
 var express = require('express');
 var bodyParser = require('body-parser');
 var Appbase = require('appbase-js');
-var Nodemailer = require("nodemailer");
 var CronJob = require('cron').CronJob;
 var SgTransport = require('nodemailer-sendgrid-transport');
 var Map = require("collections/map");
-var accessToken = "b8a93c9ae8a66c16f77c734a2eb0f423d7f906964948087c";
 var angel = require('angel.co-promise')('dbb9c3878a9ddbe0fe76fb2e7ae13c1bc5b95ebd0421b2a2', 'cea006ffd06f4b390f2107d7f323c39690d1da9be919bbc7');
-angel.setAccessToken(accessToken);
+angel.setAccessToken("b8a93c9ae8a66c16f77c734a2eb0f423d7f906964948087c");
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
+var SENDGRID_USERNAME = "";
+var SENDGRID_PASSWORD = "";
+var MAIL_FROM = "";
+
+var sendgrid   = require('sendgrid')(SENDGRID_USERNAME, SENDGRID_PASSWORD);
 
 var KEY_ANGEL_TOKEN = 'angel_key_token';
 var MOCK_FILE = path.join(__dirname, 'angelMock.json'); // Mock data angel list
@@ -22,49 +26,37 @@ var app = express();
 var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
 var userName = "CoJNVLrNB"; // Your credential username
 var passwd = "f449631d-30e9-47bd-8589-16cfbb3c06a0"; //Your credential password
-var credentials = {
-  auth: {
-    api_user: 'yashshah',
-    api_key: 'appbase12'
-  }
-}
 var countryCodesSet=[];
 //countryCodesSet['1622'] = '1622';
-var trsnp = Nodemailer.createTransport(SgTransport(credentials));
-
-var ipListen = "127.0.0.1";
-http.listen(9595, ipListen);
-
-
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
   appname: nameApp,
   username: userName,
   password: passwd
 });
-
 app.set('port', (process.env.PORT || 3001));
-
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 function sendEmail(jobText,email)
 {
-    var msgToSend = "This job may be of interest: "+jobText;
-    var mail = {
-        from: "appbase.io",
-        to: email,
-        subject: "New job recently registered",
-        text: msgToSend,
-        html: "<b>"+msgToSend+"</b>"
-    }
-    console.log(mail);
-    trsnp.sendMail(mail, function(error, info){
-      if(error){
-        return console.log(error);
+    var email      = new sendgrid.Email();
+    email.addTo(email);
+    email.setFrom(MAIL_FROM);
+    email.setSubject("[AngelAppBase appbase.io] New job recently registered");
+    email.setText("This job may be of interest: "+jobText);
+    email.setHtml("<strong>This job may be of interest: </strong> %how%");
+    email.addSubstitution("%how%", jobText);
+    email.addHeader('X-Sent-Using', 'SendGrid-API');
+    email.addHeader('X-Transport', 'web');
+    //email.addFile({path: './gif.gif', filename: 'owl.gif'});
+
+    sendgrid.send(email, function(err, json) {
+      if (err) { 
+        return console.error(err); 
       }
-      console.log('Response: ' + info.response);
+      console.log(json);
     });
 }
 
@@ -93,24 +85,34 @@ function createObjToAppBase(obj, countryCode){
 
 // Run in determineted time for search jobs in angel-list
 // Run every five minutes
-new CronJob('*/1 * * * *', function() {
-    /*fs.readFile(MOCK_FILE, function(err, data) {
-      if (err) {
-        console.error(err);
-        process.exit(1);
-      }*/
+new CronJob('*/1 * * * *', function() {   
       Object.keys(countryCodesSet).forEach(function (countryCode) {
         if(countryCode!=null && countryCode!=""){
           runInsertJobsInAppBase(countryCode);
         }
-      });
-    /*});*/
+      });    
   }, function () {
     /* This function is executed when the job stops */
   },
   true, /* Start the job right now */
   'America/Los_Angeles' /* Time zone of this job. */
 );
+
+function broadcastForEmail(msg){
+  appbaseRef.search({
+        type: 'email',
+        body: {
+            query: {
+                match_all : {}
+            }
+        }
+    }).on('data', function(opr, err) {          
+      sendEmail(msg,email)     
+      console.log(opr);
+    }).on('error', function(err) {
+      console.log("caught a stream error", err);
+    }); 
+}
 
 function runInsertJobsInAppBase(countryCode){
       angel.jobs.tag(countryCode).then(function(body) {
@@ -125,6 +127,7 @@ function runInsertJobsInAppBase(countryCode){
             appbaseRef.index(createObjToAppBase(obj, countryCode)).on('data', function(res) {
                 if(res.created){
                   console.log(res);
+                  broadcastForEmail(obj.title);                  
                 }            
             }).on('error', function(err) {
                 console.log(err);
@@ -147,51 +150,32 @@ function getRefTypeTag(obj, typeTag){
   return displayName;
 }
 
-app.get('/api/list', function(req, res) {
-    var jobsList = new Map();
-    var country = req.query.country.trim();
-    var city = req.query.city.toLowerCase();
-    var email = req.query.email.toLowerCase();
-   
-    if(!isNaN(country)){
-       countryCodesSet[country] = country;
-    }
-    /*appbaseRef.searchStream({
-        type: 'job',
-        body: {
-            query: {
-                filtered: {
-                  filter : {
-                    terms : { 
-                      location : [city]
-                    }
-                  }
-                }
-              }
-              query: {
-                  match_all: {}
-              }
-            }
-    })*/
-    appbaseRef.search({
-        type: 'job',
-        body: {
-            query: {
-                match : { 
-                      location : city
-                    }
-            }
-        }
-    }).on('data', function(opr, err) {
-      
-      //console.log(opr);
-      jobsList.set(opr._id, opr);
-      //WebSocket to sinalize new job
-      io.emit('job_list', JSON.stringify(jobsList.values()));      
+app.post('/api/newmail', function(req, res) {
+    res.setHeader('Cache-Control', 'no-cache');
+    body = {msg: ""};
+    var mail = req.body.email.toLowerCase();
+    var objCreated = {           
+      type: "email",
+      id: mail,
+      body: {
+        email: mail            
+      }
+    };
+
+     appbaseRef.index(objCreated).on('data', function(res) {
+        if(res.created){
+          console.log(res);
+          body = {msg: "Email registered successfully"};
+        }else{
+          body = {msg: "E-mail is already in our database!"};
+        }   
+        broadcastForEmail("Tste");         
     }).on('error', function(err) {
-      console.log("caught a stream error", err);
-    }); 
-    res.json([]);   
+        console.log(err);
+        body = {msg: "Error registering email."};
+    });
+    res.setHeader('Cache-Control', 'no-cache');
+    res.json(body);
 });
 
 app.post('/api/req', function(req, res) {

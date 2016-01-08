@@ -7,11 +7,12 @@ var Navbar = ReactBootstrap.Navbar,
     ButtonGroup = ReactBootstrap.ButtonGroup,
     Button  = ReactBootstrap.Button,
     Input = ReactBootstrap.Input,
+    Alert = ReactBootstrap.Alert,
     Table = ReactBootstrap.Table;
 
 var nameApp = 'AngelAppBaseEx'; // Name app for created in appbase.io
-var userName = "FBwcJXltL"; // Your credential username
-var passwd = "c056b235-e937-4db0-948f-a09a55ddc1cd"; //Your credential password
+var userName = "CoJNVLrNB"; // Your credential username
+var passwd = "f449631d-30e9-47bd-8589-16cfbb3c06a0"; //Your credential password
 
 var appbaseRef = new Appbase({
   url: 'https://scalr.api.appbase.io',
@@ -26,7 +27,8 @@ var JobBox = React.createClass({
     var objFather = this;
   },
   getInitialState: function() {
-    return {data: []};
+    return {data: [],alertVisible: false, msgAlert: "", typeAlert: "success"};
+    this.setState({alertVisible: false});
   },
   handleJobSubmit: function(job){
     var objThis = this;
@@ -34,24 +36,43 @@ var JobBox = React.createClass({
     if(jobs ==null || (jobs!=null && jobs.length==0)){
       jobs = this.state[0];      
     }
-    console.log(job);
-     appbaseRef.search({
+    //console.log(job);
+    appbaseRef.search({
         type: 'job',
         body: {
-            query: {
-                match : { 
-                      location : job.city
-                    }
-            }
+          query: {
+              match : { 
+                location : job.city
+              }
+          }
         }
     }).on('data', function(opr, err) {          
-      objThis.setState({data: [opr]});     
+      objThis.setState({data: [opr],alertVisible: true, typeAlert: "success", msgAlert: "Operation executed success!"});
     }).on('error', function(err) {
       console.log("caught a stream error", err);
+      objThis.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Error to search."});
     }); 
   },
   handleEmailSubmit: function(mail){
-
+    var objCreated = {           
+      type: "email",
+      id: mail.email,
+      body: {
+        email: mail.email            
+      }
+    };  
+    var objJobBox = this;
+    appbaseRef.index(objCreated).on('data', function(res) {
+        if(res.created){
+          console.log(res);
+          objJobBox.setState({alertVisible: true, typeAlert: "success", msgAlert: "Email registered successfully"});          
+        }else{
+          objJobBox.setState({alertVisible: true, typeAlert: "info", msgAlert: "E-mail is already in our database!"});
+        }       
+    }).on('error', function(err) {
+        console.log(err);
+        objJobBox.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Error registering email."});        
+    });
   },
   componentDidMount: function() {
     this.loadJobsFromServer();    
@@ -63,6 +84,7 @@ var JobBox = React.createClass({
       <div className="jobBox">
       <ABNavBar />
         <h1>Search Jobs</h1>
+        <AlertAngel onBoundState = {this.state} />
         <JobMailForm onJoinMailSubmit={this.handleEmailSubmit} />
         <JobForm onSearchJobSubmit={this.handleJobSubmit} />
         <br />
@@ -74,10 +96,8 @@ var JobBox = React.createClass({
 
 
 var JobsList = React.createClass({
-  render: function() {
-    console.log(this.props.data);
+  render: function() {    
     var jobNodes = this.props.data;
-    console.log(jobNodes);
     if(jobNodes!=null && jobNodes.length>0){
       var jobNodes = jobNodes[0].hits.hits.map(function(varJob) {
 
@@ -256,11 +276,36 @@ var ABNavBar = React.createClass({
 });
 
 
+var AlertAngel = React.createClass({
+  getInitialState: function() {
+    return ({alertVisible: false})
+  },
+  render: function() {
+    var onBoundState = this.props.onBoundState;
+    if (onBoundState.alertVisible) {
+      return (
+        <Alert bsStyle={onBoundState.typeAlert} onDismiss={this.handleAlertDismiss} dismissAfter={5000}>
+          <h4>{onBoundState.typeAlert}!</h4>
+          <p>{onBoundState.msgAlert}</p>
+        </Alert>
+      );
+    }
+    return (<label />);
+  },
+
+  handleAlertDismiss: function() {
+    this.props.onBoundState.alertVisible = false;
+    this.setState({alertVisible: false});
+  },
+
+  handleAlertShow: function() {
+    this.props.onBoundState.alertVisible = true;
+    this.setState({alertVisible: true});
+  }
+});
+
+
 React.render(
-<JobBox url="/api/list" />,
+<JobBox />,
 document.getElementById('content')
 );
-
-
-
-//React.render(<MyReactBootstrapButton />, document.getElementById("content"));
