@@ -46,13 +46,17 @@ var JobBox = React.createClass({
         body: {
            query: {    
               bool: {
-                    "must": [
-                        {term: {
+                    must: [
+                        {
+                          term: {
                             country_code: job.country
-                        }},
-                        {term: {
+                          }
+                        },
+                        {
+                          match: {
                             location: job.city
-                        }}
+                          }
+                        }
                     ]
                 }    
             }
@@ -110,18 +114,23 @@ var JobBox = React.createClass({
   }
 });
 
+function toCapitalize(str){
+    return str.replace(/\w\S*/g, function(txt){
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
 
 var JobsList = React.createClass({
   render: function() {    
     var jobNodes = this.props.data;
     if(jobNodes!=null && jobNodes.length>0){
       var jobNodes = jobNodes[0].hits.hits.map(function(varJob) {
-
+        toCapitalize
         return (
           <Job title={varJob._source.title} 
           job_type = {varJob._source.job_type} 
           url={varJob._source.angellist_url} 
           key={varJob._id}  
+          location={toCapitalize(varJob._source.location)}
           prop_key={varJob._id}   
           role={varJob._source.role_tag}/>
         );
@@ -133,6 +142,7 @@ var JobsList = React.createClass({
           <thead>
             <tr>
               <th>Code</th>
+              <th>Location</th>
               <th>Title Job</th>
               <th>Role</th>
               <th>Job Type</th>
@@ -163,6 +173,7 @@ var Job = React.createClass({
     return (
       <tr className="job">
         <td>{this.props.prop_key}</td>
+        <td>{this.props.location}</td>
         <td>{this.props.title}</td>
         <td>{this.props.role}</td>        
         <td>{this.props.job_type}</td>        
