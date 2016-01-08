@@ -21,6 +21,13 @@ var appbaseRef = new Appbase({
   password: passwd
 });
 
+var AppBaseUtils = function(){
+  this.capitalize = function(str){
+      return str.replace(/\w\S*/g, function(txt){
+          return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+  };
+}
+var utils = new AppBaseUtils(); 
 
 var JobBox = React.createClass({
   loadJobsFromServer: function() {    
@@ -51,7 +58,7 @@ var JobBox = React.createClass({
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
-    
+
     console.log(job);
     appbaseRef.search({
         type: 'job',
@@ -126,23 +133,18 @@ var JobBox = React.createClass({
   }
 });
 
-function toCapitalize(str){
-    return str.replace(/\w\S*/g, function(txt){
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-}
 
 var JobsList = React.createClass({
   render: function() {    
     var jobNodes = this.props.data;
     if(jobNodes!=null && jobNodes.length>0){
       var jobNodes = jobNodes[0].hits.hits.map(function(varJob) {
-        toCapitalize
         return (
           <Job title={varJob._source.title} 
           job_type = {varJob._source.job_type} 
           url={varJob._source.angellist_url} 
           key={varJob._id}  
-          location={toCapitalize(varJob._source.location)}
+          location={utils.capitalize(varJob._source.location)}
           prop_key={varJob._id}   
           role={varJob._source.role_tag}/>
         );
@@ -181,7 +183,6 @@ var Job = React.createClass({
   },
 
   render: function() {
-    console.log(this.props);
     return (
       <tr className="job">
         <td>{this.props.prop_key}</td>
@@ -324,7 +325,7 @@ var AlertAngel = React.createClass({
     if (onBoundState.alertVisible) {
       return (
         <Alert bsStyle={onBoundState.typeAlert} onDismiss={this.handleAlertDismiss} dismissAfter={5000}>
-          <h4>{onBoundState.typeAlert}!</h4>
+          <h4>{utils.capitalize(onBoundState.typeAlert)}!</h4>
           <p>{onBoundState.msgAlert}</p>
         </Alert>
       );
