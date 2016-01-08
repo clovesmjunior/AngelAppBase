@@ -28,7 +28,6 @@ var JobBox = React.createClass({
   },
   getInitialState: function() {
     return {data: [],alertVisible: false, msgAlert: "", typeAlert: "success"};
-    this.setState({alertVisible: false});
   },
   handleJobSubmit: function(job){
     var objThis = this;
@@ -36,12 +35,18 @@ var JobBox = React.createClass({
     if(jobs ==null || (jobs!=null && jobs.length==0)){
       jobs = this.state[0];      
     }
+    if (!job.country || !job.city) {  
+      this.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Please complete the country and city!"});    
+      return;
+    }
+
     //console.log(job);
     appbaseRef.search({
         type: 'job',
         body: {
           query: {
               match : { 
+                country_code : job.country,
                 location : job.city
               }
           }
@@ -54,6 +59,10 @@ var JobBox = React.createClass({
     }); 
   },
   handleEmailSubmit: function(mail){
+    if (!mail.email) {  
+      this.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Email is not empty!"});    
+      return;
+    }
     var objCreated = {           
       type: "email",
       id: mail.email,
@@ -170,10 +179,7 @@ var JobForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
     var country = this.state.country.trim();
-    var city = this.state.city.trim();    
-    if (!city || !country) {
-      return;
-    }
+    var city = this.state.city.trim();   
     this.props.onSearchJobSubmit({country: country, city: city});
     this.setState({country: '', city: ''});
   },
@@ -191,7 +197,8 @@ var JobForm = React.createClass({
             <Navbar.Form pullLeft>
               <Input
                   type="text"
-                  placeholder="Country"
+                  placeholder="Country Code"
+                  validations="isNumeric"
                   value={this.state.country}
                   onChange={this.handleCountryChange}
                 />
@@ -238,6 +245,8 @@ var JobMailForm = React.createClass({
             <Navbar.Form pullLeft>              
                   <Input
                     type="text"
+                    validations="isEmail"
+                    validationError="This is not a valid email"
                     placeholder="E-mail"
                     value={this.state.email}
                     onChange={this.handleEmailChange}
