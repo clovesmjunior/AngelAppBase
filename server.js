@@ -97,7 +97,10 @@ new CronJob('*/1 * * * *', function() {
   true, /* Start the job right now */
   'America/Los_Angeles' /* Time zone of this job. */
 );
-
+function validateEmail(email) {
+    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
 function broadcastForEmail(msg){
   appbaseRef.search({
         type: 'email',
@@ -106,8 +109,10 @@ function broadcastForEmail(msg){
                 match_all : {}
             }
         }
-    }).on('data', function(opr, err) {          
-      sendEmail(msg,email)     
+    }).on('data', function(opr, err) {   
+      if(opr.email!=undefined && opr.email!="" && validateEmail(opr.email)){
+        sendEmail(msg,opr.email);
+      }             
       console.log(opr);
     }).on('error', function(err) {
       console.log("caught a stream error", err);
