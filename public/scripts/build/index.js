@@ -97,7 +97,7 @@ var JobBox = React.createClass({
       this.setState({alertVisible: true, typeAlert: "warning", msgAlert: "Email is not empty!"});    
       return;
     }
-    if(utils.validateEmail(mail.email)){
+    if(!utils.validateEmail(mail.email)){
       this.setState({alertVisible: true, typeAlert: "danger", msgAlert: "Email error. Ex: mail@email.com!"});    
       return;
     }

@@ -110,7 +110,7 @@ function broadcastForEmail(msg){
             }
         }
     }).on('data', function(opr, err) {   
-      if(opr.email!=undefined && opr.email!="" && validateEmail(opr.email)){
+      if(opr.email!=undefined && opr.email!="" && !validateEmail(opr.email)){
         sendEmail(msg,opr.email);
       }             
       console.log(opr);
